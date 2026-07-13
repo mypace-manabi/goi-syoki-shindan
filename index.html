@@ -147,14 +147,14 @@ table{border-collapse:collapse}
 </section>
 
 <section id="reviewScreen" class="screen review">
-  <h2>復習</h2>
+  <h2>見直し</h2>
   <div class="box">
     <div class="reading" id="rreading"></div>
     <div class="term" id="rterm"></div>
     <div id="rchoices"></div>
   </div>
   <div class="meta" id="rmeta"></div>
-  <div class="actions no-print"><button class="btn gray" onclick="showResult(true)">結果にもどる</button></div>
+  <div class="actions no-print"><button class="btn gray" onclick="showResult(true)">もどる</button></div>
 </section>
 </div>
 
@@ -330,13 +330,13 @@ function showResult(sw=true){
   grade.textContent = r.grade;
   subs.innerHTML = "<tr><th>問題番号</th><th>学年相当</th><th>得点</th><th>評価</th></tr>" +
     r.blocks.map(b=>`<tr><td>${esc(b.range)}</td><td>${esc(b.label)}</td><td>${b.score}/10</td><td>${b.eval}</td></tr>`).join("");
-  list.innerHTML = '<tr><th>No.</th><th>正誤</th><th>問題</th><th>あなたの答え</th><th class="ph">復習</th></tr>' +
+  list.innerHTML = '<tr><th>No.</th><th>正誤</th><th>問題</th><th>あなたの答え</th><th class="ph">見直し</th></tr>' +
     r.rows.map((x,i)=>`<tr>
       <td>${esc(x.q.no)}</td>
       <td class="center ${x.ok?"ok":"ng"}">${x.ok?"○":"？"}</td>
       <td>${displayText(x.q.termDisplay)}</td>
       <td>${displayText(x.answerDisplay)}</td>
-      <td class="ph"><button class="review-icon" aria-label="復習" onclick="review(${i})">🔍</button></td>
+      <td class="ph"><button class="review-icon" aria-label="見直し" onclick="review(${i})">🔍</button></td>
     </tr>`).join("");
   if(sw) screen("resultScreen");
 }
@@ -354,11 +354,11 @@ function review(i){
     d.className = "choice";
     if(n === q.correct) d.classList.add("good");
     if(n === r.answerIndex && n !== q.correct) d.classList.add("bad");
-    const suffix = n===q.correct ? "　正解" : (n===r.answerIndex ? "　あなたの解答" : "");
+    const suffix = n===r.answerIndex && n!==q.correct ? "　あなたの答え" : "";
     d.innerHTML = `○ ${displayText(o.display)}${suffix}`;
     rchoices.appendChild(d);
   });
-  rmeta.innerHTML = `あなたの解答：${displayText(r.answerDisplay)}<br>正解：${displayText(r.correctDisplay)}`;
+  rmeta.innerHTML = `あなたの答え：${displayText(r.answerDisplay)}<br>正解：${displayText(r.correctDisplay)}`;
   screen("reviewScreen");
 }
 
