@@ -1,118 +1,356 @@
-<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8">
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
 <title>学年語彙数診断</title>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
-*{box-sizing:border-box}body{margin:0;background:#f4f4f5;color:#111827;font-family:"UD Digi Kyokasho N-R","UD デジタル 教科書体 N-R","Hiragino Sans","Yu Gothic",Meiryo,sans-serif}button{font-family:inherit}.app{width:min(1120px,100%);margin:0 auto;background:#fff;min-height:100vh;box-shadow:0 0 20px #0001}.screen{display:none}.active{display:block}.start{padding:52px 32px;text-align:center}h1{font-size:44px;margin:0 0 20px}.lead{font-size:22px;line-height:1.7}.btn{border:0;border-radius:10px;background:#0b65d8;color:#fff;font-weight:900;font-size:20px;padding:13px 32px;box-shadow:0 4px 0 #084a9e;cursor:pointer}.gray{background:#64748b;box-shadow:0 4px 0 #334155}.head{min-height:126px;padding:28px 34px;border-bottom:1px solid #e5e7eb}.progress{font-size:18px;color:#475569;font-weight:900;margin-bottom:10px}.reading{font-size:16px;min-height:20px}.term{font-size:44px;line-height:1.1}.options{min-height:610px;padding:28px 34px}.opt{display:flex;gap:14px;align-items:flex-start;margin-bottom:22px;font-size:24px;line-height:1.5;cursor:pointer}.opt input{width:24px;height:24px;margin-top:7px;flex:0 0 auto}.footer{height:72px;border-top:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between;padding:10px 20px;position:sticky;bottom:0;background:#fff}.circle{width:42px;height:42px;border-radius:999px;border:1px solid #bfdbfe;background:white;color:#0b65d8;font-size:28px;cursor:pointer}.result{padding:22px 28px 40px}.top{text-align:center;margin:0 auto 18px;max-width:780px}.rtitle{font-size:24px;font-weight:900;margin-bottom:12px}table{border-collapse:collapse}.gtable{margin:0 auto 14px;font-size:16px}.gtable th,.gtable td{border:1px solid #e5e7eb;padding:7px 12px;text-align:left}.gl{font-size:28px;font-weight:900;color:#dc2626}.notice{font-size:17px;line-height:1.5;margin:8px 0 18px}.cards{display:flex;justify-content:center;gap:16px;flex-wrap:wrap;margin:12px 0}.card{background:#f4f4f8;border-radius:10px;padding:12px 38px;min-width:150px}.label{font-weight:900;color:#475569}.value{font-size:28px;font-weight:900}.subs{width:min(680px,100%);margin:16px auto;font-size:15px}.subs th,.subs td{border:1px solid #e5e7eb;padding:7px;text-align:center}.actions{display:flex;gap:12px;justify-content:center;margin:18px 0 26px;flex-wrap:wrap}.list{width:100%;font-size:15px}.list th,.list td{border-bottom:1px solid #e5e7eb;padding:10px 8px;text-align:left;vertical-align:top}.center{text-align:center!important}.ok{color:#0f766e;font-weight:900}.ng{color:#dc2626;font-weight:900}.link{border:0;background:transparent;color:#0b65d8;font-weight:900;cursor:pointer}.review{padding:28px 34px 100px}.box{border:4px solid #dbeafe;border-radius:18px;padding:22px;margin-bottom:18px}.choice{font-size:21px;line-height:1.45;margin:12px 0;padding:10px 12px;border-radius:10px}.good{background:#dcfce7;border:2px solid #16a34a}.bad{background:#fee2e2;border:2px solid #ef4444}.meta{font-size:20px;line-height:1.8}
-@media(max-width:700px){.app{box-shadow:none}.head{padding:22px}.options{padding:22px;min-height:560px}.opt{font-size:21px}.term{font-size:38px}.result{padding:18px 14px 32px}.list{font-size:13px}}
-@media print{@page{size:A4 portrait;margin:8mm}body{background:white}.app{width:100%;box-shadow:none;min-height:auto}.no-print,.footer,.actions,.link{display:none!important}.screen{display:none!important}#resultScreen{display:block!important}.result{padding:0}.top{max-width:none;margin-bottom:4px}.rtitle{font-size:14px;margin-bottom:3px}.gtable{font-size:9px;margin-bottom:4px}.gtable th,.gtable td{padding:2px 5px}.gl{font-size:14px}.notice{font-size:9px;margin:3px 0}.cards{gap:6px;margin:4px 0}.card{padding:3px 18px;min-width:90px;border:1px solid #ddd}.label{font-size:9px}.value{font-size:14px}.subs{font-size:8.5px;margin:4px auto;width:100%}.subs th,.subs td{padding:2px}.list{font-size:8px;line-height:1.12}.list th,.list td{padding:2px 3px}.ph{display:none}}
-</style></head><body><div class="app">
-<section id="startScreen" class="screen active start"><h1>学年語彙数診断</h1><div class="lead">ことばの意味として正しいものをえらびます。<br>わからない問題は「分からない」をえらんでください。<br><b>50問・15分</b>です。</div><button class="btn" onclick="start()">はじめる</button></section>
-<section id="questionScreen" class="screen"><div class="head"><div class="progress"><span id="qno">1</span> / 50</div><div class="reading" id="reading"></div><div class="term" id="term"></div></div><div class="options" id="opts"></div><div class="footer no-print"><button class="navtext" onclick="prev()">もどる</button><button class="btn" onclick="showResult()">終わる</button><button class="navtext" onclick="next()">つぎへ</button></div></section>
-<section id="resultScreen" class="screen result"><div class="top"><div class="rtitle">今のきみにぴったりのグレードは…？</div><table class="gtable"><tr><th>開始グレード</th><th>条件</th></tr><tr><td class="gl">A</td><td>条件なし</td></tr><tr><td class="gl">B</td><td>小2・小3相当が ◎ または ○</td></tr><tr><td class="gl">C</td><td>小2が◎、小3・小4相当が ◎ または ○</td></tr><tr><td class="gl">D</td><td>小2〜小4が◎、小5相当が ◎ または ○</td></tr><tr><td class="gl">E</td><td>小2〜小5が◎、小6相当が ◎ または ○</td></tr><tr><td class="gl">F</td><td>小2〜小6すべて◎</td></tr></table><div class="notice">※ 評価は厳密なものではありません。E・Fグレードからのスタートについては担当の先生と相談しましょう。</div><div class="cards"><div class="card"><div class="label">得点</div><div class="value" id="total">0</div><div>(/50)</div></div><div class="card"><div class="label">開始グレード</div><div class="value" id="grade">A</div></div></div><table class="subs" id="subs"></table><div class="actions no-print"><button class="btn" onclick="window.print()">結果を出力</button><button class="btn gray" onclick="backQ()">問題にもどる</button></div></div><table class="list" id="list"></table></section>
-<section id="reviewScreen" class="screen review"><h2>復習</h2><div class="box"><div class="reading" id="rreading"></div><div class="term" id="rterm"></div><div id="rchoices"></div></div><div class="meta" id="rmeta"></div><div class="actions no-print"><button class="btn gray" onclick="showResult(true)">結果にもどる</button></div></section>
-</div><script>
-const raw = `1|大切|たいせつ|大きなかたちに切ること。|小さなかたちに切ること。|だいじにするようす。|大きくなるようす。|3
-2|茶わん|ちゃわん|砂場で遊ぶときに使うもの。|ごはんを食べるときに使うもの。|部屋をそうじするときに使うもの。|お風呂に入るときに使うもの。|2
-3|べんり||くりかえすこと。|こわれること。|くらべること。|役に立つこと。|4
-4|ひびく||音がまわりに広がって伝わる。|はりにかかった魚をつりあげる。|耳をすませる。|こわがってふるえる。|1
-5|まかせる||ほかの人にやってもらう。|前もってやっておく。|あきていやになる。|知らないうちにたまる。|1
-6|気をつける|きをつける|用意する。|注意する。|文句を言う。|ねむくなる。|2
-7|そっくり||とてもおどろく。|そのままにしておく。|どきどきする。|よくにている。|4
-8|しょうかい||みんなであつまること。|行き先を決めること。|人に知らせること。|くりかえすこと。|3
-9|あんない||内容や道すじなどを知らせること。|心配がなくなってほっとすること。|学校の中。|なにも考えがないこと。|1
-10|げんかん||部屋と部屋をつなぐ細い道。|建物の一番高いところ。|屋根と天じょうの間。|建物の正面の入り口。|4
-11|とうとう||よくよく。しみじみ。|ずっと前に。とっくに。|ついに。けっきょく。|とにかく。何といっても。|3
-12|しがみつく||しゃがみこんで地面に手をつく。|しゃがれた声で話す。|しっかりとすわりこむ。|しっかりとだきつく。|4
-13|調理|ちょうり|髪を切ること。|練習をすること。|食事を作ること。|実験してみること。|3
-14|ゆかいな||人が多くてこみあっているようす。|声が大きくさわがしいようす。|まともでなくておかしなようす。|おもしろくて楽しいようす。|4
-15|めずらしい||ものが足りていないようす。|はじめて見たり聞いたりするようす。|とても大切に思うようす。|たくさんのものが集まっているようす。|2
-16|うなる||右に左に曲がりながら長く続く。|小さい声で話す。ひそひそうわさする。|折れないで弓のように曲がる。|苦しくて声を出す。動物が低く声を出す。|4
-17|道しるべ|みちしるべ|歩いている人を車から守るもの。|方向や目的地までの長さを示すもの。|水が流れるようになっている場所。|人が通れるように少し高くなっている場所。|2
-18|耳をすます|みみをすます|聞こえないふりをする。|ちらっと聞く。ふと耳に入る。|注意して聞く。じっと聞く。|聞いていていやな感じになる。|3
-19|おくびょう||病気の人の世話をすること。|ずうずうしいこと。|なかなか治らない病気。|びくびくしてこわがること。|4
-20|標識|ひょうしき|目じるし。|ある考えを表した短い言葉。|ものごとをはかるもとになるもの。めあて。|理科や社会科などの勉強に使う、虫や植物などの実物の見本。|1
-21|流し|ながし|人が通ること。|物をすてるところ。|物を洗うところ。|小さい川のこと。|3
-22|しもばしら||寒くてかれてしまった葉のついていない木。|夜中に水分がこおって色が白くなった部分。|家を建てるときに地面にうめる柱の下の部分。|冬に土の中の水分がこおって柱のようになること。|4
-23|はげしい||強い。きつい。|さわがしい。うるさい。|少ない。小さい。|速い。みじかい。|1
-24|たいてい||特別であるようす。|ふつうであるようす。|大事であるようす。|大きな体をしているようす。|2
-25|未決|みけつ|まだ決まらないこと。|うまくかたづくこと。|すでに決まったこと。|こわれてしまうこと。|1
-26|速達|そくたつ|ふつうよりも速くとどける郵便のこと。|かけっこやマラソンがとても速い人のこと。|時間をかけずに目ひょうを達成すること。|本を読む速さと読み方が上達すること。|1
-27|分類|ぶんるい|地域のあちこちにわかれて広がること。|物事をなにかのきまりでわけ、どこかのグループに入れること。|形や性質などが、よくにていること。|物事を金額の高さによって、買えるものと買えないものに区別すること。|2
-28|なじみぶかい||すっかりなれ親しんでいて、しっくりくること。|しっかりと話し合いをして、よくわかっていること。|きっぱりとはなれていて、遠くにあること。|すっきりとした味がして、たくさん食べられること。|1
-29|みるみる||ずいぶん。かなり。|うまくいくか失敗するかわからないが、運を天にまかせて。|見ているうちに。わずかの間に。|むやみに。やたらに。|3
-30|活発|かっぱつ|生活している間に発見するものごと。|社会で活やくしている人。|生き生きとして元気のあるようす。|生き生きとして元気のある人。|3
-31|しんしんと||すべてが新しくなるようす。|あたりが静かになるようす。|どんどんと前に進むようす。|光が明るくかがやくようす。|2
-32|いろり||ひらがなの四十七文字のこと。|古くからの言い伝え。|色の取り合わせ。はなやかさ。|部屋の中で火をたくようにしたところ。|4
-33|資格|しかく|知識があって正しい考えができる人。|自分の立場やすることをよく知ること。|争いごとを話し合いで解決すること。|ある職業につくために必要な条件。|4
-34|ほがらか||気持ちが明るくはればれとしているようす。|気持ちがぼんやりとしてはっきりとしないようす。|動きがおそくてにぶいようす。|動きが速くて生き生きとしているようす。|1
-35|ほとり||温泉がわき出ているところ。|川や池のすぐ近く。岸辺。|湖や海の底のこと。|丘の頂上近くのところ。|2
-36|なだめる||なれて親しくなる。仲よしになる。|人をおだてて無理に高い地位につかせる。|おこったり泣いたりしている人をなぐさめる。|声を出したり手をたたいたりしてさかんにからかう。|3
-37|かねて||前から。|ずっと。|後から。|もっと。|1
-38|責任|せきにん|自分の権限として守ること。|自分の意地としてゆずれないこと。|自分の分担としてしなければならないこと。|自分の仕事として頭に入れておけばよいこと。|3
-39|いまいましい||あわただしいようす。|腹立たしいようす。|いまかいまかと待つようす。|いいかげんにやるようす。|2
-40|案の定|あんのじょう|さっぱり。|やっぱり。|うっかり。|しっかり。|2
-41|にわかに||とつぜん。|ゆっくりと。|だんだんと。|はげしく。|1
-42|肩身がせまい|かたみがせまい|服のサイズが合わず、きゅうくつに感じている。|周りに対して引け目を感じている。|となりの人との間の空間がせまいようす。|かたはばがせまいようす。|2
-43|はばかる||周りを気にして遠りょする。人前でひかえめにする。幅をきかす。|自分には関係ないと見ないようにする。見てみぬふりをする。|見こみがないと思ってあきらめる。もう取り合わないようにする。|計画的に人をだます。人をだまそうと策を練る。|1
-44|らちが明かない|らちがあかない|あまりにもすることが多くてひまにならない。いそがしい。|十分に満足できる。あきることがない。|決められずにいつまでももたもたしている。きりがない。|ぴったりとつまっていてすきまがない。おびただしい。|3
-45|痛ましい|いたましい|とても痛い。|ずうずうしくて自分勝手だ。|幼くてかわいらしい。|気の毒でかわいそうだ。|4
-46|不毛|ふもう|土地がやせていて作物などが育たないこと。|かみの毛が生えないこと。|かみの毛がたくさん生えること。|毛布がないこと。|1
-47|従順|じゅうじゅん|組み立て方をまちがえないこと。|命令なので、しかたなく言うことを聞くようす。|わりこみせずにきちんと待つこと。|おとなしくて人の言うことをよく聞くようす。|4
-48|風潮|ふうちょう|海水の流れ。|世の中の傾向。|よくないうわさ。|世の中の苦しみや悲しみ。|2
-49|設ける|もうける|利益を出す。得をする。|多くの人々に知らせて集める。|用意する。したくする。|思いのままに使いこなす。|3
-50|こときれる||死ぬ。亡くなる。|連絡がとだえる。|関係がなくなる。|期限が過ぎる。|1`;
-const qs = raw.trim().split("\n").map(line=>{const p=line.split("|");return {no:+p[0],term:p[1],reading:p[2],options:[p[3],p[4],p[5],p[6],"分からない"],correct:+p[7]}});
-let ans=Array(qs.length).fill(null), cur=0;
-const rubyMap = {
-  "学年":"がくねん","語彙数":"ごいすう","診断":"しんだん","意味":"いみ","正":"ただ","問題":"もんだい","分":"わ",
-  "大切":"たいせつ","茶":"ちゃ","気":"き","用意":"ようい","注意":"ちゅうい","文句":"もんく","言":"い","人":"ひと","知":"し",
-  "内容":"ないよう","道":"みち","学校":"がっこう","中":"なか","考":"かんが","部屋":"へや","建物":"たてもの","一番":"いちばん",
-  "高":"たか","屋根":"やね","天":"てん","間":"あいだ","正面":"しょうめん","入口":"いりぐち","前":"まえ","何":"なん",
-  "地面":"じめん","手":"て","声":"こえ","話":"はな","調理":"ちょうり","髪":"かみ","切":"き","練習":"れんしゅう",
-  "食事":"しょくじ","作":"つく","実験":"じっけん","多":"おお","大":"おお","楽":"たの","見":"み","聞":"き","思":"おも",
-  "集":"あつ","右":"みぎ","左":"ひだり","曲":"ま","長":"なが","続":"つづ","小":"ちい","折":"お","弓":"ゆみ","苦":"くる",
-  "出":"だ","動物":"どうぶつ","低":"ひく","歩":"ある","車":"くるま","守":"まも","方向":"ほうこう","目的地":"もくてきち",
-  "示":"しめ","水":"みず","流":"なが","場所":"ばしょ","通":"とお","少":"すこ","耳":"みみ","病気":"びょうき","世話":"せわ",
-  "治":"なお","標識":"ひょうしき","目":"め","表":"あらわ","短":"みじか","言葉":"ことば","理科":"りか","社会科":"しゃかいか",
-  "勉強":"べんきょう","使":"つか","虫":"むし","植物":"しょくぶつ","実物":"じつぶつ","見本":"みほん","物":"もの","洗":"あら",
-  "川":"かわ","寒":"さむ","葉":"は","木":"き","夜中":"よなか","水分":"すいぶん","色":"いろ","白":"しろ","部分":"ぶぶん",
-  "家":"いえ","柱":"はしら","下":"した","冬":"ふゆ","土":"つち","強":"つよ","速":"はや","特別":"とくべつ","大事":"だいじ",
-  "体":"からだ","未決":"みけつ","決":"き","速達":"そくたつ","郵便":"ゆうびん","時間":"じかん","達成":"たっせい","本":"ほん",
-  "読":"よ","上達":"じょうたつ","分類":"ぶんるい","地域":"ちいき","広":"ひろ","物事":"ものごと","入":"い","形":"かたち",
-  "性質":"せいしつ","金額":"きんがく","買":"か","区別":"くべつ","親":"した","合":"あ","遠":"とお","味":"あじ","食":"た",
-  "失敗":"しっぱい","運":"うん","活発":"かっぱつ","生活":"せいかつ","発見":"はっけん","社会":"しゃかい","活":"かつ","生":"い",
-  "元気":"げんき","新":"あたら","静":"しず","進":"すす","光":"ひかり","明":"あか","四十七文字":"よんじゅうしちもじ",
-  "古":"ふる","伝":"つた","取":"と","火":"ひ","資格":"しかく","知識":"ちしき","自分":"じぶん","立場":"たちば","争":"あらそ",
-  "解決":"かいけつ","職業":"しょくぎょう","必要":"ひつよう","条件":"じょうけん","気持":"きも","動":"うご","温泉":"おんせん",
-  "池":"いけ","近":"ちか","岸辺":"きしべ","湖":"みずうみ","海":"うみ","底":"そこ","丘":"おか","頂上":"ちょうじょう","仲":"なか",
-  "無理":"むり","地位":"ちい","前":"まえ","後":"あと","責任":"せきにん","権限":"けんげん","意地":"いじ","分担":"ぶんたん",
-  "仕事":"しごと","頭":"あたま","腹立":"はらだ","案":"あん","定":"じょう","肩身":"かたみ","服":"ふく","周":"まわ","対":"たい",
-  "引":"ひ","目":"め","感じ":"かん","空間":"くうかん","遠":"えん","関係":"かんけい","計画的":"けいかくてき","策":"さく",
-  "痛":"いた","勝手":"かって","幼":"おさな","毒":"どく","不毛":"ふもう","土地":"とち","作物":"さくもつ","育":"そだ",
-  "毛":"け","毛布":"もうふ","従順":"じゅうじゅん","組":"く","立":"た","方":"かた","命令":"めいれい","風潮":"ふうちょう",
-  "海水":"かいすい","世":"よ","傾向":"けいこう","悲":"かな","設":"もう","利益":"りえき","得":"とく","亡":"な","連絡":"れんらく",
-  "期限":"きげん","過":"す"
-};
-function withRuby(text){
-  if(!text) return "";
-  let out = text;
-  const keys = Object.keys(rubyMap).sort((a,b)=>b.length-a.length);
-  keys.forEach(k=>{
-    const re = new RegExp(k.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'), "g");
-    out = out.replace(re, `<ruby>${k}<rt>${rubyMap[k]}</rt></ruby>`);
-  });
-  return out;
+*{box-sizing:border-box}
+body{
+  margin:0;background:#f4f4f5;color:#111827;
+  font-family:"UD Digi Kyokasho N-R","UD デジタル 教科書体 N-R","Hiragino Sans","Yu Gothic",Meiryo,sans-serif;
+}
+button{font-family:inherit}
+.app{width:min(1120px,100%);margin:0 auto;background:#fff;min-height:100vh;box-shadow:0 0 20px #0001}
+.screen{display:none}.active{display:block}
+.start{padding:52px 32px;text-align:center}
+h1{font-size:44px;margin:0 0 20px}
+.lead{font-size:22px;line-height:1.7}
+.status{margin:18px auto 0;max-width:720px;font-size:16px;line-height:1.6;color:#475569}
+.error{color:#b91c1c;font-weight:900}
+.btn{border:0;border-radius:10px;background:#0b65d8;color:#fff;font-weight:900;font-size:20px;padding:13px 32px;box-shadow:0 4px 0 #084a9e;cursor:pointer}
+.btn:disabled{background:#94a3b8;box-shadow:0 4px 0 #64748b;cursor:not-allowed}
+.gray{background:#64748b;box-shadow:0 4px 0 #334155}
+.head{min-height:126px;padding:28px 34px;border-bottom:1px solid #e5e7eb}
+.progress{font-size:18px;color:#475569;font-weight:900;margin-bottom:10px}
+.reading{font-size:16px;min-height:20px}
+.term{font-size:44px;line-height:1.1}
+ruby rt{font-size:.45em;line-height:1;font-weight:700}
+.options{min-height:560px;padding:28px 34px}
+.opt{display:flex;gap:14px;align-items:flex-start;margin-bottom:22px;font-size:24px;line-height:1.5;cursor:pointer}
+.opt input{width:24px;height:24px;margin-top:7px;flex:0 0 auto}
+.footer{
+  min-height:112px;border-top:1px solid #e5e7eb;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:10px;padding:10px 20px;position:sticky;bottom:0;background:#fff
+}
+.nav-row{display:flex;gap:18px;justify-content:center;align-items:center;width:100%}
+.navtext{border:3px solid #bfdbfe;border-radius:999px;background:#eff6ff;color:#0b65d8;font-size:22px;font-weight:900;padding:13px 38px;cursor:pointer;box-shadow:0 4px 0 #bfdbfe}
+.finish-btn{min-width:160px}
+.result{padding:22px 28px 40px}
+.top{text-align:center;margin:0 auto 18px;max-width:780px}
+.rtitle{font-size:24px;font-weight:900;margin-bottom:12px}
+table{border-collapse:collapse}
+.gtable{margin:0 auto 14px;font-size:16px}
+.gtable th,.gtable td{border:1px solid #e5e7eb;padding:7px 12px;text-align:left}
+.gl{font-size:28px;font-weight:900;color:#dc2626}
+.notice{font-size:17px;line-height:1.5;margin:8px 0 18px}
+.cards{display:flex;justify-content:center;gap:16px;flex-wrap:wrap;margin:12px 0}
+.card{background:#f4f4f8;border-radius:10px;padding:12px 38px;min-width:150px}
+.label{font-weight:900;color:#475569}.value{font-size:28px;font-weight:900}
+.subs{width:min(680px,100%);margin:16px auto;font-size:15px}
+.subs th,.subs td{border:1px solid #e5e7eb;padding:7px;text-align:center}
+.actions{display:flex;gap:12px;justify-content:center;margin:18px 0 26px;flex-wrap:wrap}
+.list{width:100%;font-size:15px}
+.list th,.list td{border-bottom:1px solid #e5e7eb;padding:10px 8px;text-align:left;vertical-align:top}
+.center{text-align:center!important}.ok{color:#0f766e;font-weight:900}.ng{color:#dc2626;font-weight:900}
+.link{border:0;background:transparent;color:#0b65d8;font-weight:900;cursor:pointer}
+.review{padding:28px 34px 100px}
+.box{border:4px solid #dbeafe;border-radius:18px;padding:22px;margin-bottom:18px}
+.choice{font-size:21px;line-height:1.45;margin:12px 0;padding:10px 12px;border-radius:10px}
+.good{background:#dcfce7;border:2px solid #16a34a}.bad{background:#fee2e2;border:2px solid #ef4444}
+.meta{font-size:20px;line-height:1.8}
+.file-input{margin-top:14px;font-size:15px}
+@media(max-width:700px){
+ .app{box-shadow:none}.head{padding:22px}.options{padding:22px;min-height:520px}.opt{font-size:21px}.term{font-size:38px}.result{padding:18px 14px 32px}.list{font-size:13px}
+ .navtext{font-size:20px;padding:12px 28px}
+}
+@media print{
+ @page{size:A4 portrait;margin:8mm}
+ body{background:white}.app{width:100%;box-shadow:none;min-height:auto}
+ .no-print,.footer,.actions,.link{display:none!important}
+ .screen{display:none!important}#resultScreen{display:block!important}
+ .result{padding:0}.top{max-width:none;margin-bottom:4px}.rtitle{font-size:14px;margin-bottom:3px}
+ .gtable{font-size:9px;margin-bottom:4px}.gtable th,.gtable td{padding:2px 5px}.gl{font-size:14px}
+ .notice{font-size:9px;margin:3px 0}.cards{gap:6px;margin:4px 0}.card{padding:3px 18px;min-width:90px;border:1px solid #ddd}
+ .label{font-size:9px}.value{font-size:14px}.subs{font-size:8.5px;margin:4px auto;width:100%}.subs th,.subs td{padding:2px}
+ .list{font-size:8px;line-height:1.12}.list th,.list td{padding:2px 3px}.ph{display:none}
+}
+</style>
+</head>
+<body>
+<div class="app">
+<section id="startScreen" class="screen active start">
+  <h1>学年語彙数診断</h1>
+  <div class="lead">
+    ことばの意味として正しいものをえらびます。<br>
+    わからない問題は「分からない」をえらんでください。<br>
+    <b>50問・15分</b>です。
+  </div>
+  <button id="startBtn" class="btn" onclick="start()" disabled>読み込み中</button>
+  <div id="loadStatus" class="status">問題ファイルを読み込んでいます。</div>
+  <div id="fallbackArea" class="file-input no-print" style="display:none">
+    Excelを同じフォルダに置いても読み込めない場合は、ここから選んでください。<br>
+    <input type="file" id="filePicker" accept=".xlsx,.xls" />
+  </div>
+</section>
+
+<section id="questionScreen" class="screen">
+  <div class="head">
+    <div class="progress"><span id="qno">1</span> / <span id="qtotal">50</span></div>
+    <div class="reading" id="reading"></div>
+    <div class="term" id="term"></div>
+  </div>
+  <div class="options" id="opts"></div>
+  <div class="footer no-print">
+    <div class="nav-row">
+      <button class="navtext" onclick="prev()">もどる</button>
+      <button class="navtext" onclick="next()">つぎへ</button>
+    </div>
+    <button class="btn finish-btn" onclick="showResult()">終わる</button>
+  </div>
+</section>
+
+<section id="resultScreen" class="screen result">
+  <div class="top">
+    <div class="rtitle">今のきみにぴったりのグレードは…？</div>
+    <table class="gtable">
+      <tr><th>開始グレード</th><th>条件</th></tr>
+      <tr><td class="gl">A</td><td>条件なし</td></tr>
+      <tr><td class="gl">B</td><td>小2・小3相当が ◎ または ○</td></tr>
+      <tr><td class="gl">C</td><td>小2が◎、小3・小4相当が ◎ または ○</td></tr>
+      <tr><td class="gl">D</td><td>小2〜小4が◎、小5相当が ◎ または ○</td></tr>
+      <tr><td class="gl">E</td><td>小2〜小5が◎、小6相当が ◎ または ○</td></tr>
+      <tr><td class="gl">F</td><td>小2〜小6すべて◎</td></tr>
+    </table>
+    <div class="notice">※ 評価は厳密なものではありません。E・Fグレードからのスタートについては担当の先生と相談しましょう。</div>
+    <div class="cards">
+      <div class="card"><div class="label">得点</div><div class="value" id="total">0</div><div id="totalMax">(/50)</div></div>
+      <div class="card"><div class="label">開始グレード</div><div class="value" id="grade">A</div></div>
+    </div>
+    <table class="subs" id="subs"></table>
+    <div class="actions no-print">
+      <button class="btn" onclick="window.print()">結果を出力</button>
+      <button class="btn gray" onclick="backQ()">問題にもどる</button>
+    </div>
+  </div>
+  <table class="list" id="list"></table>
+</section>
+
+<section id="reviewScreen" class="screen review">
+  <h2>復習</h2>
+  <div class="box">
+    <div class="reading" id="rreading"></div>
+    <div class="term" id="rterm"></div>
+    <div id="rchoices"></div>
+  </div>
+  <div class="meta" id="rmeta"></div>
+  <div class="actions no-print"><button class="btn gray" onclick="showResult(true)">結果にもどる</button></div>
+</section>
+</div>
+
+<script>
+const EXCEL_FILE_NAME = "goi_shindan_questions.xlsx";
+let qs = [];
+let ans = [];
+let cur = 0;
+
+function esc(s){
+  return String(s ?? "").replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+function rubyToHtml(text){
+  const s = String(text ?? "");
+  let html = "";
+  let last = 0;
+  const re = /\{\{(.*?)<<(.*?)>>\}\}/g;
+  let m;
+  while((m = re.exec(s)) !== null){
+    html += esc(s.slice(last, m.index));
+    html += `<ruby>${esc(m[1])}<rt>${esc(m[2])}</rt></ruby>`;
+    last = re.lastIndex;
+  }
+  html += esc(s.slice(last));
+  return html;
+}
+function plainText(text){
+  return String(text ?? "").replace(/\{\{(.*?)<<(.*?)>>\}\}/g, "$1");
+}
+function normalize(v){ return String(v ?? "").trim(); }
+
+function screen(id){
+  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+}
+function setStatus(message, isError=false){
+  const el = document.getElementById("loadStatus");
+  el.textContent = message;
+  el.className = isError ? "status error" : "status";
+}
+function enableStart(){
+  const b = document.getElementById("startBtn");
+  b.disabled = false;
+  b.textContent = "はじめる";
+  document.getElementById("qtotal").textContent = qs.length;
+  document.getElementById("totalMax").textContent = `(/${qs.reduce((s,q)=>s+q.point,0)})`;
 }
 
-function screen(id){document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));document.getElementById(id).classList.add("active")}
-function start(){cur=0;showQ();screen("questionScreen")}
-function showQ(){const q=qs[cur];qno.textContent=q.no;reading.textContent=q.reading||"";term.innerHTML=withRuby(q.term);opts.innerHTML="";q.options.forEach((o,i)=>{const l=document.createElement("label");l.className="opt";l.innerHTML=`<input type="radio" name="a" value="${i+1}" ${ans[cur]===i+1?"checked":""}> <span>${o}</span>`;l.querySelector("input").onchange=()=>ans[cur]=i+1;opts.appendChild(l)})}
-function prev(){if(cur>0){cur--;showQ()}}
-function next(){if(cur<qs.length-1){cur++;showQ()}else showResult()}
-function ev(s){return s>=9?"◎":s>=7?"○":"△"}
-function at(e){return e==="◎"||e==="○"} function db(e){return e==="◎"}
-function calc(){const rows=qs.map((q,i)=>{const a=ans[i], ok=a===q.correct;return {q,answerIndex:a,answer:a?q.options[a-1]:"-",correct:q.options[q.correct-1],ok,pt:ok?1:0}});const total=rows.reduce((s,r)=>s+r.pt,0);const blocks=[];for(let b=0;b<5;b++){const sc=rows.slice(b*10,b*10+10).reduce((s,r)=>s+r.pt,0);blocks.push({range:`${b*10+1}〜${b*10+10}`,label:`小${b+2}相当`,score:sc,eval:ev(sc)})};const e=blocks.map(b=>b.eval);let g="A";if(at(e[0])&&at(e[1]))g="B";if(db(e[0])&&at(e[1])&&at(e[2]))g="C";if(db(e[0])&&db(e[1])&&db(e[2])&&at(e[3]))g="D";if(db(e[0])&&db(e[1])&&db(e[2])&&db(e[3])&&at(e[4]))g="E";if(e.every(db))g="F";return {rows,total,blocks,grade:g}}
-function showResult(sw=true){const r=calc();total.textContent=r.total;grade.textContent=r.grade;subs.innerHTML="<tr><th>問題番号</th><th>学年相当</th><th>得点</th><th>評価</th></tr>"+r.blocks.map(b=>`<tr><td>${b.range}</td><td>${b.label}</td><td>${b.score}/10</td><td>${b.eval}</td></tr>`).join("");list.innerHTML='<tr><th>No.</th><th>正誤</th><th>あなたの解答</th><th>正解</th><th>得点</th><th class="ph">復習</th></tr>'+r.rows.map((x,i)=>`<tr><td>${i+1}</td><td class="center ${x.ok?"ok":"ng"}">${x.ok?"○":"×"}</td><td>${x.answer}</td><td>${x.correct}</td><td>${x.pt}/1</td><td class="ph"><button class="link" onclick="review(${i})">復習</button></td></tr>`).join("");if(sw)screen("resultScreen")}
-function backQ(){showQ();screen("questionScreen")}
-function review(i){const r=calc().rows[i], q=r.q;rreading.textContent=q.reading||"";rterm.innerHTML=withRuby(q.term);rchoices.innerHTML="";q.options.forEach((o,j)=>{const n=j+1,d=document.createElement("div");d.className="choice";if(n===q.correct)d.classList.add("good");if(n===r.answerIndex&&n!==q.correct)d.classList.add("bad");d.textContent=`○ ${o}${n===q.correct?"　正解":n===r.answerIndex?"　あなたの解答":""}`;rchoices.appendChild(d)});rmeta.innerHTML=`あなたの解答：${r.answer}<br>正解：${r.correct}<br>得点：${r.pt}/1`;screen("reviewScreen")}
-</script></body></html>
+async function loadExcelFromUrl(){
+  try{
+    const res = await fetch(EXCEL_FILE_NAME, {cache:"no-store"});
+    if(!res.ok) throw new Error("HTTP " + res.status);
+    const ab = await res.arrayBuffer();
+    parseWorkbook(XLSX.read(ab, {type:"array"}));
+    setStatus(`${qs.length}問を読み込みました。`);
+    enableStart();
+  }catch(e){
+    setStatus("問題ファイルを自動で読み込めませんでした。GitHub Pages上で、index.html と goi_shindan_questions.xlsx が同じフォルダにあるか確認してください。", true);
+    document.getElementById("fallbackArea").style.display = "block";
+  }
+}
+
+function parseWorkbook(wb){
+  const ws = wb.Sheets["問題入力"] || wb.Sheets[wb.SheetNames[0]];
+  const data = XLSX.utils.sheet_to_json(ws, {defval:""});
+  const questions = [];
+  data.forEach(row => {
+    if(normalize(row["有効"]) === "いいえ") return;
+    const no = Number(row["No."]);
+    if(!no) return;
+    const options = [1,2,3,4,5].map(n => ({
+      raw: normalize(row[`選択肢${n}`]),
+      display: normalize(row[`選択肢${n}_表示用`] || row[`選択肢${n}`])
+    }));
+    const correct = Number(row["正解番号"]);
+    if(!correct || options.some(o => !o.raw)) return;
+    questions.push({
+      no,
+      gradeLabel: normalize(row["学年相当"]),
+      termRaw: normalize(row["問題語句"]),
+      termDisplay: normalize(row["問題語句_表示用"] || row["問題語句"]),
+      reading: normalize(row["問題語句よみ"]),
+      options,
+      correct,
+      point: Number(row["配点"] || 1),
+      unit: normalize(row["単元"])
+    });
+  });
+  questions.sort((a,b)=>a.no-b.no);
+  if(questions.length === 0) throw new Error("No questions");
+  qs = questions;
+  ans = Array(qs.length).fill(null);
+}
+
+function start(){ cur=0; showQ(); screen("questionScreen"); }
+function showQ(){
+  const q = qs[cur];
+  qno.textContent = q.no;
+  reading.textContent = q.reading || "";
+  term.innerHTML = rubyToHtml(q.termDisplay);
+  opts.innerHTML = "";
+  q.options.forEach((o,i)=>{
+    const l = document.createElement("label");
+    l.className = "opt";
+    l.innerHTML = `<input type="radio" name="a" value="${i+1}" ${ans[cur]===i+1?"checked":""}> <span>${rubyToHtml(o.display)}</span>`;
+    l.querySelector("input").onchange = () => ans[cur] = i+1;
+    opts.appendChild(l);
+  });
+}
+function prev(){ if(cur>0){cur--;showQ();} }
+function next(){ if(cur<qs.length-1){cur++;showQ();} else showResult(); }
+
+function ev(score){
+  if(score >= 9) return "◎";
+  if(score >= 7) return "○";
+  return "△";
+}
+function at(e){ return e==="◎" || e==="○"; }
+function db(e){ return e==="◎"; }
+
+function calc(){
+  const rows = qs.map((q,i)=>{
+    const a = ans[i], ok = a === q.correct;
+    return {
+      q,
+      answerIndex:a,
+      answerDisplay:a ? q.options[a-1].display : "-",
+      answerText:a ? q.options[a-1].raw : "-",
+      correctDisplay:q.options[q.correct-1].display,
+      correctText:q.options[q.correct-1].raw,
+      ok,
+      pt:ok ? q.point : 0,
+      max:q.point
+    };
+  });
+  const total = rows.reduce((s,r)=>s+r.pt,0);
+  const blocks = [];
+  for(let b=0;b<5;b++){
+    const part = rows.slice(b*10,b*10+10);
+    if(part.length === 0) continue;
+    const sc = part.reduce((s,r)=>s+r.pt,0);
+    blocks.push({range:`${part[0].q.no}〜${part[part.length-1].q.no}`,label:part[0].q.gradeLabel || `小${b+2}相当`,score:sc,eval:ev(sc)});
+  }
+  const e = blocks.map(b=>b.eval);
+  let g = "A";
+  if(e.length>=2 && at(e[0])&&at(e[1])) g="B";
+  if(e.length>=3 && db(e[0])&&at(e[1])&&at(e[2])) g="C";
+  if(e.length>=4 && db(e[0])&&db(e[1])&&db(e[2])&&at(e[3])) g="D";
+  if(e.length>=5 && db(e[0])&&db(e[1])&&db(e[2])&&db(e[3])&&at(e[4])) g="E";
+  if(e.length>=5 && e.every(db)) g="F";
+  return {rows,total,blocks,grade:g};
+}
+
+function showResult(sw=true){
+  const r = calc();
+  total.textContent = r.total;
+  grade.textContent = r.grade;
+  subs.innerHTML = "<tr><th>問題番号</th><th>学年相当</th><th>得点</th><th>評価</th></tr>" +
+    r.blocks.map(b=>`<tr><td>${esc(b.range)}</td><td>${esc(b.label)}</td><td>${b.score}/10</td><td>${b.eval}</td></tr>`).join("");
+  list.innerHTML = '<tr><th>No.</th><th>正誤</th><th>あなたの解答</th><th>正解</th><th>得点</th><th class="ph">復習</th></tr>' +
+    r.rows.map((x,i)=>`<tr>
+      <td>${esc(x.q.no)}</td>
+      <td class="center ${x.ok?"ok":"ng"}">${x.ok?"○":"×"}</td>
+      <td>${rubyToHtml(x.answerDisplay)}</td>
+      <td>${rubyToHtml(x.correctDisplay)}</td>
+      <td>${x.pt}/${x.max}</td>
+      <td class="ph"><button class="link" onclick="review(${i})">復習</button></td>
+    </tr>`).join("");
+  if(sw) screen("resultScreen");
+}
+function backQ(){ showQ(); screen("questionScreen"); }
+
+function review(i){
+  const r = calc().rows[i], q = r.q;
+  rreading.textContent = q.reading || "";
+  rterm.innerHTML = rubyToHtml(q.termDisplay);
+  rchoices.innerHTML = "";
+  q.options.forEach((o,j)=>{
+    const n = j+1;
+    const d = document.createElement("div");
+    d.className = "choice";
+    if(n === q.correct) d.classList.add("good");
+    if(n === r.answerIndex && n !== q.correct) d.classList.add("bad");
+    const suffix = n===q.correct ? "　正解" : (n===r.answerIndex ? "　あなたの解答" : "");
+    d.innerHTML = `○ ${rubyToHtml(o.display)}${suffix}`;
+    rchoices.appendChild(d);
+  });
+  rmeta.innerHTML = `あなたの解答：${rubyToHtml(r.answerDisplay)}<br>正解：${rubyToHtml(r.correctDisplay)}<br>得点：${r.pt}/${r.max}`;
+  screen("reviewScreen");
+}
+
+document.getElementById("filePicker").addEventListener("change", async e=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  try{
+    const ab = await file.arrayBuffer();
+    parseWorkbook(XLSX.read(ab, {type:"array"}));
+    setStatus(`${qs.length}問を読み込みました。`);
+    enableStart();
+  }catch(err){
+    setStatus("選択したExcelを読み込めませんでした。列名を確認してください。", true);
+  }
+});
+
+window.addEventListener("load", loadExcelFromUrl);
+</script>
+</body>
+</html>
