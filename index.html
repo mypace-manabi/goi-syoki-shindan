@@ -269,7 +269,7 @@ function showQ(){
   const progressValue = Math.round(((cur + 1) / qs.length) * 100);
   document.getElementById("progressFill").style.width = progressValue + "%";
   document.getElementById("progressPercent").textContent = progressValue + "%";
-  reading.textContent = q.reading || "";
+  reading.textContent = "";
   term.innerHTML = displayText(q.termDisplay);
   opts.innerHTML = "";
   q.options.forEach((o,i)=>{
@@ -345,7 +345,7 @@ function backQ(){ showQ(); screen("questionScreen"); }
 function review(i){
   lastReviewIndex = i;
   const r = calc().rows[i], q = r.q;
-  rreading.textContent = q.reading || "";
+  rreading.textContent = "";
   rterm.innerHTML = displayText(q.termDisplay);
   rchoices.innerHTML = "";
   q.options.forEach((o,j)=>{
