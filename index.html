@@ -60,7 +60,7 @@ table{border-collapse:collapse}
 .choice{font-size:21px;line-height:1.45;margin:12px 0;padding:10px 12px;border-radius:10px}
 .good{background:#dcfce7;border:2px solid #16a34a}.bad{background:#fee2e2;border:2px solid #ef4444}
 .meta{font-size:20px;line-height:1.8}
-.file-input{margin-top:14px;font-size:15px}
+.file-input{margin-top:14px;font-size:15px}.ruby-toggle{position:fixed;right:14px;top:14px;z-index:50;border:2px solid #bfdbfe;border-radius:999px;background:#fff;color:#0b65d8;font-size:16px;font-weight:900;padding:9px 16px;box-shadow:0 3px 0 #bfdbfe;cursor:pointer}
 @media(max-width:700px){
  .app{box-shadow:none}.head{padding:22px}.options{padding:22px;min-height:520px}.opt{font-size:21px}.term{font-size:38px}.result{padding:18px 14px 32px}.list{font-size:13px}
  .navtext{font-size:20px;padding:12px 28px}
@@ -79,6 +79,7 @@ table{border-collapse:collapse}
 </style>
 </head>
 <body>
+<button id="rubyToggle" class="ruby-toggle no-print" onclick="toggleRuby()">ふりがな：ON</button>
 <div class="app">
 <section id="startScreen" class="screen active start">
   <h1>学年語彙数診断</h1>
@@ -154,6 +155,8 @@ const EXCEL_FILE_NAME = "goi_shindan_questions.xlsx";
 let qs = [];
 let ans = [];
 let cur = 0;
+let rubyEnabled = true;
+let lastReviewIndex = null;
 
 function esc(s){
   return String(s ?? "").replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
@@ -174,6 +177,17 @@ function rubyToHtml(text){
 }
 function plainText(text){
   return String(text ?? "").replace(/\{\{(.*?)<<(.*?)>>\}\}/g, "$1");
+}
+function displayText(text){
+  return rubyEnabled ? rubyToHtml(text) : esc(plainText(text));
+}
+function toggleRuby(){
+  rubyEnabled = !rubyEnabled;
+  document.getElementById("rubyToggle").textContent = rubyEnabled ? "ふりがな：ON" : "ふりがな：OFF";
+  const activeId = document.querySelector(".screen.active")?.id;
+  if(activeId === "questionScreen") showQ();
+  if(activeId === "resultScreen") showResult(false);
+  if(activeId === "reviewScreen" && lastReviewIndex !== null) review(lastReviewIndex);
 }
 function normalize(v){ return String(v ?? "").trim(); }
 
@@ -245,12 +259,12 @@ function showQ(){
   const q = qs[cur];
   qno.textContent = q.no;
   reading.textContent = q.reading || "";
-  term.innerHTML = rubyToHtml(q.termDisplay);
+  term.innerHTML = displayText(q.termDisplay);
   opts.innerHTML = "";
   q.options.forEach((o,i)=>{
     const l = document.createElement("label");
     l.className = "opt";
-    l.innerHTML = `<input type="radio" name="a" value="${i+1}" ${ans[cur]===i+1?"checked":""}> <span>${rubyToHtml(o.display)}</span>`;
+    l.innerHTML = `<input type="radio" name="a" value="${i+1}" ${ans[cur]===i+1?"checked":""}> <span>${displayText(o.display)}</span>`;
     l.querySelector("input").onchange = () => ans[cur] = i+1;
     opts.appendChild(l);
   });
@@ -309,8 +323,8 @@ function showResult(sw=true){
     r.rows.map((x,i)=>`<tr>
       <td>${esc(x.q.no)}</td>
       <td class="center ${x.ok?"ok":"ng"}">${x.ok?"○":"×"}</td>
-      <td>${rubyToHtml(x.answerDisplay)}</td>
-      <td>${rubyToHtml(x.correctDisplay)}</td>
+      <td>${displayText(x.answerDisplay)}</td>
+      <td>${displayText(x.correctDisplay)}</td>
       <td>${x.pt}/${x.max}</td>
       <td class="ph"><button class="link" onclick="review(${i})">復習</button></td>
     </tr>`).join("");
@@ -319,9 +333,10 @@ function showResult(sw=true){
 function backQ(){ showQ(); screen("questionScreen"); }
 
 function review(i){
+  lastReviewIndex = i;
   const r = calc().rows[i], q = r.q;
   rreading.textContent = q.reading || "";
-  rterm.innerHTML = rubyToHtml(q.termDisplay);
+  rterm.innerHTML = displayText(q.termDisplay);
   rchoices.innerHTML = "";
   q.options.forEach((o,j)=>{
     const n = j+1;
@@ -330,10 +345,10 @@ function review(i){
     if(n === q.correct) d.classList.add("good");
     if(n === r.answerIndex && n !== q.correct) d.classList.add("bad");
     const suffix = n===q.correct ? "　正解" : (n===r.answerIndex ? "　あなたの解答" : "");
-    d.innerHTML = `○ ${rubyToHtml(o.display)}${suffix}`;
+    d.innerHTML = `○ ${displayText(o.display)}${suffix}`;
     rchoices.appendChild(d);
   });
-  rmeta.innerHTML = `あなたの解答：${rubyToHtml(r.answerDisplay)}<br>正解：${rubyToHtml(r.correctDisplay)}<br>得点：${r.pt}/${r.max}`;
+  rmeta.innerHTML = `あなたの解答：${displayText(r.answerDisplay)}<br>正解：${displayText(r.correctDisplay)}<br>得点：${r.pt}/${r.max}`;
   screen("reviewScreen");
 }
 
