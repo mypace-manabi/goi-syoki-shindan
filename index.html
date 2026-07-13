@@ -23,7 +23,11 @@ h1{font-size:44px;margin:0 0 20px}
 .btn:disabled{background:#94a3b8;box-shadow:0 4px 0 #64748b;cursor:not-allowed}
 .gray{background:#64748b;box-shadow:0 4px 0 #334155}
 .head{min-height:126px;padding:28px 34px;border-bottom:1px solid #e5e7eb}
-.progress{font-size:18px;color:#475569;font-weight:900;margin-bottom:10px}
+.progress-row{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:8px}
+.progress{font-size:18px;color:#475569;font-weight:900}
+.progress-percent{font-size:16px;color:#0b65d8;font-weight:900}
+.progress-bar{width:100%;height:10px;border-radius:999px;background:#e5e7eb;overflow:hidden;margin:0 0 12px}
+.progress-fill{height:100%;width:0%;border-radius:999px;background:#0b65d8;transition:width .25s ease}
 .reading{font-size:16px;min-height:20px}
 .term{font-size:44px;line-height:1.1}
 ruby rt{font-size:.45em;line-height:1;font-weight:700}
@@ -98,7 +102,11 @@ table{border-collapse:collapse}
 
 <section id="questionScreen" class="screen">
   <div class="head">
-    <div class="progress"><span id="qno">1</span> / <span id="qtotal">50</span></div>
+    <div class="progress-row">
+      <div class="progress"><span id="qno">1</span> / <span id="qtotal">50</span></div>
+      <div class="progress-percent" id="progressPercent">0%</div>
+    </div>
+    <div class="progress-bar" aria-hidden="true"><div class="progress-fill" id="progressFill"></div></div>
     <div class="reading" id="reading"></div>
     <div class="term" id="term"></div>
   </div>
@@ -258,6 +266,9 @@ function start(){ cur=0; showQ(); screen("questionScreen"); }
 function showQ(){
   const q = qs[cur];
   qno.textContent = q.no;
+  const progressValue = Math.round(((cur + 1) / qs.length) * 100);
+  document.getElementById("progressFill").style.width = progressValue + "%";
+  document.getElementById("progressPercent").textContent = progressValue + "%";
   reading.textContent = q.reading || "";
   term.innerHTML = displayText(q.termDisplay);
   opts.innerHTML = "";
@@ -347,7 +358,7 @@ function review(i){
     d.innerHTML = `○ ${displayText(o.display)}${suffix}`;
     rchoices.appendChild(d);
   });
-  rmeta.innerHTML = `あなたの解答：${displayText(r.answerDisplay)}<br>正解：${displayText(r.correctDisplay)}<br>得点：${r.pt}/${r.max}`;
+  rmeta.innerHTML = `あなたの解答：${displayText(r.answerDisplay)}<br>正解：${displayText(r.correctDisplay)}`;
   screen("reviewScreen");
 }
 
