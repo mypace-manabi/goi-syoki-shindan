@@ -19,6 +19,15 @@ button{font-family:inherit}
 .main-title{font-size:clamp(34px,6.2vw,68px);font-weight:900;letter-spacing:.02em}
 .sub-title{font-size:clamp(22px,3.6vw,40px);font-weight:900;margin-top:10px}
 .lead{font-size:clamp(18px,2.5vw,26px);line-height:1.8}
+.home-info-box{
+  width:min(760px,92%);
+  margin:clamp(26px,4vh,42px) auto clamp(26px,4vh,42px);
+  padding:clamp(18px,3vh,28px) clamp(18px,3vw,34px);
+  border:3px solid #dbeafe;
+  border-radius:18px;
+  text-align:left;
+  background:#fff;
+}
 .unknown-note{color:#dc2626;font-weight:900}
 .status{margin:18px auto 0;max-width:720px;font-size:16px;line-height:1.6;color:#475569}
 .error{color:#b91c1c;font-weight:900}
@@ -28,6 +37,8 @@ button{font-family:inherit}
 .head{min-height:126px;padding:28px 34px;border-bottom:1px solid #e5e7eb}
 .progress-row{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:8px}
 .progress{font-size:18px;color:#475569;font-weight:900}
+.progress-side{display:flex;align-items:center;gap:14px}
+.timer{font-size:18px;color:#dc2626;font-weight:900}
 .progress-percent{font-size:16px;color:#0b65d8;font-weight:900}
 .progress-bar{width:100%;height:10px;border-radius:999px;background:#e5e7eb;overflow:hidden;margin:0 0 12px}
 .progress-fill{height:100%;width:0%;border-radius:999px;background:#0b65d8;transition:width .25s ease}
@@ -97,7 +108,7 @@ table{border-collapse:collapse}
       <ruby>学年<rt>がくねん</rt></ruby><ruby>語彙力<rt>ごいりょく</rt></ruby><ruby>診断<rt>しんだん</rt></ruby>
     </div>
   </div>
-  <div class="lead">
+  <div class="lead home-info-box">
     ことばの<ruby>意味<rt>いみ</rt></ruby>として<ruby>正<rt>ただ</rt></ruby>しいものをえらびます。<br>
     <span class="unknown-note">わからない<ruby>問題<rt>もんだい</rt></ruby>は「<ruby>分<rt>わ</rt></ruby>からない」をえらんでください。</span><br>
     <b>50<ruby>問<rt>もん</rt></ruby>・15<ruby>分<rt>ふん</rt></ruby></b>です。
@@ -114,7 +125,10 @@ table{border-collapse:collapse}
   <div class="head">
     <div class="progress-row">
       <div class="progress"><span id="qno">1</span> / <span id="qtotal">50</span></div>
-      <div class="progress-percent" id="progressPercent">0%</div>
+      <div class="progress-side">
+        <div class="timer" id="timerDisplay">0分00秒</div>
+        <div class="progress-percent" id="progressPercent">0%</div>
+      </div>
     </div>
     <div class="progress-bar" aria-hidden="true"><div class="progress-fill" id="progressFill"></div></div>
     <div class="reading" id="reading"></div>
@@ -175,6 +189,9 @@ let ans = [];
 let cur = 0;
 let rubyEnabled = true;
 let lastReviewIndex = null;
+let timerStartedAt = null;
+let timerInterval = null;
+let elapsedMs = 0;
 
 function esc(s){
   return String(s ?? "").replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
@@ -272,7 +289,42 @@ function parseWorkbook(wb){
   ans = Array(qs.length).fill(null);
 }
 
-function start(){ cur=0; showQ(); screen("questionScreen"); }
+function start(){
+  cur = 0;
+  ans = Array(qs.length).fill(null);
+  startTimer();
+  showQ();
+  screen("questionScreen");
+}
+function startTimer(){
+  timerStartedAt = Date.now();
+  elapsedMs = 0;
+  updateTimer();
+  if(timerInterval) clearInterval(timerInterval);
+  timerInterval = setInterval(updateTimer, 1000);
+}
+function stopTimer(){
+  if(timerInterval){
+    clearInterval(timerInterval);
+    timerInterval = null;
+  }
+  if(timerStartedAt){
+    elapsedMs = Date.now() - timerStartedAt;
+  }
+}
+function formatElapsed(ms){
+  const totalSeconds = Math.floor(ms / 1000);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${minutes}分${String(seconds).padStart(2, "0")}秒`;
+}
+function updateTimer(){
+  if(timerStartedAt){
+    elapsedMs = Date.now() - timerStartedAt;
+  }
+  const el = document.getElementById("timerDisplay");
+  if(el) el.textContent = formatElapsed(elapsedMs);
+}
 function showQ(){
   const q = qs[cur];
   qno.textContent = q.no;
@@ -335,6 +387,7 @@ function calc(){
 }
 
 function showResult(sw=true){
+  stopTimer();
   const r = calc();
   total.textContent = r.total;
   grade.textContent = r.grade;
