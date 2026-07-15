@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
 <title>学年語彙数診断</title>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 <style>
 *{box-sizing:border-box}
 body{
@@ -18,6 +20,7 @@ button{font-family:inherit}
 .home-title{margin:0 auto 24px;line-height:1.25}
 .main-title{font-size:clamp(34px,6.2vw,68px);font-weight:900;letter-spacing:.02em}
 .sub-title{font-size:clamp(22px,3.6vw,40px);font-weight:900;margin-top:10px}
+.registered-r{display:inline-flex;align-items:center;justify-content:center;width:.95em;height:.95em;border:.08em solid currentColor;border-radius:50%;font-size:.48em;font-weight:900;font-style:italic;line-height:1;vertical-align:.35em;margin:0 .08em 0 .06em;padding:0 .04em 0 0}
 .lead{font-size:clamp(18px,2.5vw,26px);line-height:1.8}
 .home-info-box{
   width:min(760px,92%);
@@ -35,11 +38,10 @@ button{font-family:inherit}
 .btn:disabled{background:#94a3b8;box-shadow:0 4px 0 #64748b;cursor:not-allowed}
 .gray{background:#64748b;box-shadow:0 4px 0 #334155}
 .head{min-height:126px;padding:28px 34px;border-bottom:1px solid #e5e7eb}
-.progress-row{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:8px}
-.progress{font-size:18px;color:#475569;font-weight:900}
-.progress-side{display:flex;align-items:center;gap:14px}
-.timer{font-size:18px;color:#dc2626;font-weight:900}
-.progress-percent{font-size:16px;color:#0b65d8;font-weight:900}
+.progress-row{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:16px;margin-bottom:8px}
+.progress{font-size:18px;color:#475569;font-weight:900;justify-self:start}
+.progress-spacer{justify-self:end;min-width:110px}
+.timer{font-size:20px;color:#dc2626;font-weight:900;justify-self:center;text-align:center;white-space:nowrap}
 .progress-bar{width:100%;height:10px;border-radius:999px;background:#e5e7eb;overflow:hidden;margin:0 0 12px}
 .progress-fill{height:100%;width:0%;border-radius:999px;background:#0b65d8;transition:width .25s ease}
 .reading{font-size:16px;min-height:20px}
@@ -78,6 +80,20 @@ table{border-collapse:collapse}
 .choice{font-size:21px;line-height:1.45;margin:12px 0;padding:10px 12px;border-radius:10px}
 .good{background:#dcfce7;border:2px solid #16a34a}.bad{background:#fee2e2;border:2px solid #ef4444}
 .meta{font-size:20px;line-height:1.8}
+.pdf-work{position:fixed;left:-10000px;top:0;width:794px;background:#fff;color:#111827;font-family:"Hiragino Sans","Yu Gothic",Meiryo,sans-serif}
+.pdf-page{width:794px;min-height:1123px;padding:36px;background:#fff}
+.pdf-title{font-size:28px;font-weight:900;text-align:center;margin:0 0 24px}
+.pdf-section-title{font-size:22px;font-weight:900;margin:0 0 14px}
+.pdf-page table{width:100%;border-collapse:collapse}
+.pdf-page th,.pdf-page td{border:1px solid #d1d5db;padding:7px 8px;text-align:left;vertical-align:top}
+.pdf-page th{background:#f3f4f6}
+.pdf-summary{display:flex;gap:16px;justify-content:center;margin:18px 0}
+.pdf-card{border:1px solid #d1d5db;border-radius:10px;padding:12px 30px;text-align:center;min-width:150px}
+.pdf-card .value{font-size:28px}
+.pdf-note{font-size:14px;line-height:1.6;margin:14px 0}
+.pdf-check-table{font-size:13px;line-height:1.35}
+.pdf-check-table th,.pdf-check-table td{padding:5px 6px}
+.pdf-center{text-align:center!important}
 .file-input{margin-top:14px;font-size:15px}.ruby-toggle{position:fixed;right:14px;top:14px;z-index:50;border:2px solid #bfdbfe;border-radius:999px;background:#fff;color:#0b65d8;font-size:16px;font-weight:900;padding:9px 16px;box-shadow:0 3px 0 #bfdbfe;cursor:pointer}
 @media(max-width:700px){
  .app{box-shadow:none}.head{padding:22px}.options{padding:22px;min-height:520px}.opt{font-size:21px}.term{font-size:38px}.result{padding:18px 14px 32px}.list{font-size:13px}
@@ -102,7 +118,7 @@ table{border-collapse:collapse}
 <section id="startScreen" class="screen active start">
   <div class="home-title">
     <div class="main-title">
-      <ruby>読書<rt>どくしょ</rt></ruby><ruby>指数<rt>しすう</rt></ruby>🄬<ruby>初期<rt>しょき</rt></ruby><ruby>診断<rt>しんだん</rt></ruby>
+      <ruby>読書<rt>どくしょ</rt></ruby><ruby>指数<rt>しすう</rt></ruby><span class="registered-r">R</span><ruby>初期<rt>しょき</rt></ruby><ruby>診断<rt>しんだん</rt></ruby>
     </div>
     <div class="sub-title">
       <ruby>学年<rt>がくねん</rt></ruby><ruby>語彙力<rt>ごいりょく</rt></ruby><ruby>診断<rt>しんだん</rt></ruby>
@@ -125,10 +141,8 @@ table{border-collapse:collapse}
   <div class="head">
     <div class="progress-row">
       <div class="progress"><span id="qno">1</span> / <span id="qtotal">50</span></div>
-      <div class="progress-side">
-        <div class="timer" id="timerDisplay">0分00秒</div>
-        <div class="progress-percent" id="progressPercent">0%</div>
-      </div>
+      <div class="timer" id="timerDisplay">0分00秒</div>
+      <div class="progress-spacer" aria-hidden="true"></div>
     </div>
     <div class="progress-bar" aria-hidden="true"><div class="progress-fill" id="progressFill"></div></div>
     <div class="reading" id="reading"></div>
@@ -163,7 +177,7 @@ table{border-collapse:collapse}
     </div>
     <table class="subs" id="subs"></table>
     <div class="actions no-print">
-      <button class="btn" onclick="window.print()">結果を出力</button>
+      <button class="btn" onclick="exportPdf()">PDFで出力</button>
       <button class="btn gray" onclick="backQ()">問題にもどる</button>
     </div>
   </div>
@@ -330,7 +344,6 @@ function showQ(){
   qno.textContent = q.no;
   const progressValue = Math.round(((cur + 1) / qs.length) * 100);
   document.getElementById("progressFill").style.width = progressValue + "%";
-  document.getElementById("progressPercent").textContent = progressValue + "%";
   reading.textContent = "";
   term.innerHTML = displayText(q.termDisplay);
   opts.innerHTML = "";
@@ -424,6 +437,105 @@ function review(i){
   rmeta.innerHTML = `あなたの答え：${displayText(r.answerDisplay)}<br>正解：${displayText(r.correctDisplay)}`;
   screen("reviewScreen");
 }
+
+
+function makePdfHtml(){
+  const r = calc();
+  const totalMax = r.rows.reduce((s,x)=>s+x.max,0);
+  const page1 = document.createElement("div");
+  page1.className = "pdf-page";
+  page1.innerHTML = `
+    <div class="pdf-title">読書指数<span class="registered-r">R</span>初期診断<br><span style="font-size:22px">学年語彙力診断</span></div>
+    <div class="pdf-summary">
+      <div class="pdf-card"><div>得点</div><div class="value">${r.total}</div><div>/${totalMax}</div></div>
+      <div class="pdf-card"><div>開始グレード</div><div class="value">${r.grade}</div></div>
+    </div>
+    <div class="pdf-section-title">診断結果</div>
+    <table>
+      <tr><th>問題番号</th><th>学年相当</th><th>得点</th><th>評価</th></tr>
+      ${r.blocks.map(b=>`<tr><td>${esc(b.range)}</td><td>${esc(b.label)}</td><td>${b.score}/10</td><td>${b.eval}</td></tr>`).join("")}
+    </table>
+    <div class="pdf-note">※ 評価は厳密なものではありません。E・Fグレードからのスタートについては担当の先生と相談しましょう。</div>
+    <table>
+      <tr><th>開始グレード</th><th>条件</th></tr>
+      <tr><td>A</td><td>条件なし</td></tr>
+      <tr><td>B</td><td>小2・小3相当が ◎ または ○</td></tr>
+      <tr><td>C</td><td>小2が◎、小3・小4相当が ◎ または ○</td></tr>
+      <tr><td>D</td><td>小2〜小4が◎、小5相当が ◎ または ○</td></tr>
+      <tr><td>E</td><td>小2〜小5が◎、小6相当が ◎ または ○</td></tr>
+      <tr><td>F</td><td>小2〜小6すべて◎</td></tr>
+    </table>
+  `;
+
+  const page2 = document.createElement("div");
+  page2.className = "pdf-page";
+  page2.innerHTML = `
+    <div class="pdf-title">問題の正誤表</div>
+    <table class="pdf-check-table">
+      <tr><th>No.</th><th>正誤</th><th>問題</th><th>あなたの答え</th></tr>
+      ${r.rows.map(x=>`<tr>
+        <td class="pdf-center">${esc(x.q.no)}</td>
+        <td class="pdf-center">${x.ok ? "○" : "？"}</td>
+        <td>${displayText(x.q.termDisplay)}</td>
+        <td>${displayText(x.answerDisplay)}</td>
+      </tr>`).join("")}
+    </table>
+  `;
+  return [page1, page2];
+}
+
+async function addPageElementToPdf(pdf, element, isFirst){
+  const canvas = await html2canvas(element, {
+    scale: 2,
+    backgroundColor: "#ffffff",
+    useCORS: true
+  });
+  const imgData = canvas.toDataURL("image/jpeg", 0.95);
+  const pageW = pdf.internal.pageSize.getWidth();
+  const pageH = pdf.internal.pageSize.getHeight();
+  const margin = 0;
+  const maxW = pageW - margin * 2;
+  const maxH = pageH - margin * 2;
+  const ratio = Math.min(maxW / canvas.width, maxH / canvas.height);
+  const imgW = canvas.width * ratio;
+  const imgH = canvas.height * ratio;
+  const x = (pageW - imgW) / 2;
+  const y = (pageH - imgH) / 2;
+  if(!isFirst) pdf.addPage();
+  pdf.addImage(imgData, "JPEG", x, y, imgW, imgH);
+}
+
+async function exportPdf(){
+  const btn = event?.target;
+  const originalText = btn ? btn.textContent : "";
+  if(btn){
+    btn.disabled = true;
+    btn.textContent = "PDF作成中";
+  }
+  try{
+    const work = document.createElement("div");
+    work.className = "pdf-work";
+    const pages = makePdfHtml();
+    pages.forEach(p=>work.appendChild(p));
+    document.body.appendChild(work);
+
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF("p", "pt", "a4");
+    await addPageElementToPdf(pdf, pages[0], true);
+    await addPageElementToPdf(pdf, pages[1], false);
+    pdf.save("gakunen_goi_shindan_result.pdf");
+    document.body.removeChild(work);
+  }catch(e){
+    alert("PDFの作成に失敗しました。ブラウザの設定や通信環境を確認してください。");
+    console.error(e);
+  }finally{
+    if(btn){
+      btn.disabled = false;
+      btn.textContent = originalText || "PDFで出力";
+    }
+  }
+}
+
 
 document.getElementById("filePicker").addEventListener("change", async e=>{
   const file = e.target.files[0];
