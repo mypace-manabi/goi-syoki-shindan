@@ -57,6 +57,53 @@ button{font-family:inherit}
   text-align:left;
   background:#fff;
 }
+.grade-select-box{
+  width:min(860px,94%);
+  margin:clamp(22px,4vh,40px) auto 0;
+  padding:clamp(18px,3vh,28px) clamp(18px,3vw,34px);
+  border:3px solid #dbeafe;
+  border-radius:18px;
+  background:#fff;
+  text-align:center;
+}
+.grade-select-title{
+  font-size:clamp(18px,2.5vw,26px);
+  font-weight:900;
+  margin-bottom:14px;
+}
+.grade-buttons{
+  display:grid;
+  grid-template-columns:repeat(3, minmax(120px, 1fr));
+  gap:12px;
+  max-width:680px;
+  margin:0 auto;
+}
+.grade-btn{
+  border:3px solid #bfdbfe;
+  border-radius:14px;
+  background:#eff6ff;
+  color:#0b65d8;
+  font-size:clamp(18px,2.4vw,24px);
+  font-weight:900;
+  padding:12px 10px;
+  cursor:pointer;
+  box-shadow:0 4px 0 #bfdbfe;
+}
+.grade-btn.selected{
+  background:#0b65d8;
+  color:#fff;
+  border-color:#0b65d8;
+  box-shadow:0 4px 0 #084a9e;
+}
+.grade-goal{
+  margin-top:18px;
+  font-size:clamp(20px,3vw,30px);
+  font-weight:900;
+  color:#dc2626;
+}
+@media(max-width:700px){
+  .grade-buttons{grid-template-columns:repeat(2, minmax(120px, 1fr));}
+}
 .unknown-note{color:#dc2626;font-weight:900}
 .status{margin:18px auto 0;max-width:720px;font-size:16px;line-height:1.6;color:#475569}
 .error{color:#b91c1c;font-weight:900}
@@ -150,6 +197,19 @@ table{border-collapse:collapse}
       <ruby>学年<rt>がくねん</rt></ruby><ruby>語彙力<rt>ごいりょく</rt></ruby><ruby>診断<rt>しんだん</rt></ruby>
     </div>
   </div>
+  <div class="grade-select-box">
+    <div class="grade-select-title"><ruby>学年<rt>がくねん</rt></ruby>をえらんでください</div>
+    <div class="grade-buttons" role="radiogroup" aria-label="学年選択">
+      <button type="button" class="grade-btn" data-grade="1" onclick="selectGrade(1)">１ねんせい</button>
+      <button type="button" class="grade-btn" data-grade="2" onclick="selectGrade(2)">２<ruby>年生<rt>ねんせい</rt></ruby></button>
+      <button type="button" class="grade-btn" data-grade="3" onclick="selectGrade(3)">３<ruby>年生<rt>ねんせい</rt></ruby></button>
+      <button type="button" class="grade-btn" data-grade="4" onclick="selectGrade(4)">４<ruby>年生<rt>ねんせい</rt></ruby></button>
+      <button type="button" class="grade-btn" data-grade="5" onclick="selectGrade(5)">５<ruby>年生<rt>ねんせい</rt></ruby></button>
+      <button type="button" class="grade-btn" data-grade="6" onclick="selectGrade(6)">６<ruby>年生<rt>ねんせい</rt></ruby></button>
+    </div>
+    <div class="grade-goal" id="gradeGoal"></div>
+  </div>
+
   <div class="lead home-info-box">
     ことばの<ruby>意味<rt>いみ</rt></ruby>として<ruby>正<rt>ただ</rt></ruby>しいものをえらびます。<br>
     <span class="unknown-note">わからない<ruby>問題<rt>もんだい</rt></ruby>は「<ruby>分<rt>わ</rt></ruby>からない」をえらんでください。</span><br>
@@ -232,6 +292,8 @@ let lastReviewIndex = null;
 let timerStartedAt = null;
 let timerInterval = null;
 let elapsedMs = 0;
+let selectedGrade = null;
+let targetQuestionCount = 50;
 
 function esc(s){
   return String(s ?? "").replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
@@ -266,6 +328,25 @@ function toggleRuby(){
 }
 function normalize(v){ return String(v ?? "").trim(); }
 
+function selectGrade(grade){
+  selectedGrade = grade;
+  if(grade <= 2){
+    targetQuestionCount = 20;
+  }else if(grade === 3){
+    targetQuestionCount = 30;
+  }else{
+    targetQuestionCount = 50;
+  }
+
+  document.querySelectorAll(".grade-btn").forEach(btn=>{
+    btn.classList.toggle("selected", Number(btn.dataset.grade) === grade);
+  });
+
+  const goal = document.getElementById("gradeGoal");
+  if(goal){
+    goal.innerHTML = `${targetQuestionCount}<ruby>問<rt>もん</rt></ruby>までがんばろう！`;
+  }
+}
 function screen(id){
   document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
   document.getElementById(id).classList.add("active");
@@ -330,6 +411,10 @@ function parseWorkbook(wb){
 }
 
 function start(){
+  if(!selectedGrade){
+    alert("学年をえらんでください。");
+    return;
+  }
   cur = 0;
   ans = Array(qs.length).fill(null);
   startTimer();
